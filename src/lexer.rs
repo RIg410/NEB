@@ -126,6 +126,12 @@ mod test {
     }
 
     #[test]
+    #[should_panic(expected = "Invalid character: 'd'")]
+    pub fn test_invalid_input() {
+        perform(&[(Token::IntNumber, "10"), (Token::Star, "*"), (Token::EOF, "")], "10 * d");
+    }
+
+    #[test]
     pub fn test_number() {
         perform(&[(Token::IntNumber, "123123"), (Token::EOF, "")], "123123");
         perform(&[(Token::IntNumber, "0"), (Token::EOF, "")], "0");
