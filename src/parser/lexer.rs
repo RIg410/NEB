@@ -1,4 +1,6 @@
 use anyhow::Error;
+use std::fmt;
+use std::fmt::{Display, Formatter};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Token {
@@ -13,6 +15,34 @@ pub enum Token {
     Slash,
     Caret,
     Percent,
+}
+
+impl Token {
+    pub fn is_number(&self) -> bool {
+        match self {
+            Token::IntNumber | Token::FloatNumber => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_paren(&self) -> bool {
+        match self {
+            Token::LParen | Token::RParen => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_sign(&self) -> bool {
+        match self {
+            Token::Plus
+            | Token::Minus
+            | Token::Star
+            | Token::Slash
+            | Token::Caret
+            | Token::Percent => true,
+            _ => false,
+        }
+    }
 }
 
 pub struct Lexer<'input> {
@@ -42,8 +72,11 @@ impl<'input> Lexer<'input> {
         &self.text[self.cur_start..self.cur_end]
     }
 
-    pub fn start_loc(&self) -> usize {
-        self.cur_start
+    pub fn loc(&self) -> Loc {
+        Loc {
+            start: self.cur_start,
+            end: self.cur_end,
+        }
     }
 
     pub fn previous_end_loc(&self) -> usize {
@@ -97,14 +130,27 @@ impl<'input> Lexer<'input> {
     }
 }
 
+#[derive(Debug, PartialEq, PartialOrd, Clone)]
+pub struct Loc {
+    pub start: usize,
+    pub end: usize,
+}
+
+impl Display for Loc {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "[{}:{}]", self.start, self.end)
+    }
+}
+
 #[cfg(test)]
 mod test {
-    use crate::lexer::{Lexer, Token};
+    use crate::parser::lexer::{Lexer, Token};
 
     fn perform(tokens: &[(Token, &str)], input: &str) {
         let mut lexer = Lexer::new(input);
 
-        let expected = tokens.iter()
+        let expected = tokens
+            .iter()
             .map(|(tkn, ct)| (*tkn, ct.to_string()))
             .collect::<Vec<_>>();
 
@@ -128,7 +174,14 @@ mod test {
     #[test]
     #[should_panic(expected = "Invalid character: 'd'")]
     pub fn test_invalid_input() {
-        perform(&[(Token::IntNumber, "10"), (Token::Star, "*"), (Token::EOF, "")], "10 * d");
+        perform(
+            &[
+                (Token::IntNumber, "10"),
+                (Token::Star, "*"),
+                (Token::EOF, ""),
+            ],
+            "10 * d",
+        );
     }
 
     #[test]
