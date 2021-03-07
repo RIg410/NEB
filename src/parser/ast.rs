@@ -75,6 +75,24 @@ pub enum Val {
     Float(f64),
 }
 
+impl Val {
+    #[inline]
+    pub fn is_int(&self) -> bool {
+        match self {
+            Val::Int(_) => true,
+            Val::Float(_) => false,
+        }
+    }
+
+    #[inline]
+    pub fn into_float(self) -> Val {
+        match self {
+            Val::Int(val) => { Val::Float(val as f64) }
+            Val::Float(val) => Val::Float(val),
+        }
+    }
+}
+
 impl Display for Val {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
@@ -124,7 +142,6 @@ impl Sequence {
         }
     }
 }
-
 
 pub fn parse_exp(lexer: &mut Lexer) -> Result<Sequence, Error> {
     let mut last: Option<Token> = None;
