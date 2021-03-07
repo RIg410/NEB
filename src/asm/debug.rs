@@ -85,6 +85,30 @@ impl Arch for Debug {
         println!("powf {}, {}", Self::FLOAT_ACC.name, op.name);
     }
 
+    fn popi(asm: &mut Asm, reg: Self::IntReg) {
+        println!("popi {}", reg.name);
+    }
+
+    fn popf(asm: &mut Asm, reg: Self::FloatReg) {
+        println!("popf {}", reg.name);
+    }
+
+    fn pushli(asm: &mut Asm, val: i64) {
+        println!("pushli {}", val);
+    }
+
+    fn pushlf(asm: &mut Asm, val: f64) {
+        println!("pushli {}", val);
+    }
+
+    fn pushi(asm: &mut Asm, reg: Self::IntReg) {
+        println!("pushi {}", reg.name);
+    }
+
+    fn pushf(asm: &mut Asm, reg: Self::FloatReg) {
+        println!("pushf {}", reg.name);
+    }
+
     fn ret(_: &mut Asm) {
         println!("ret");
     }

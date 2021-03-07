@@ -42,6 +42,15 @@ pub trait Arch {
     fn powi(asm: &mut Asm, op: Self::IntReg);
     fn powf(asm: &mut Asm, op: Self::FloatReg);
 
+    fn popi(asm: &mut Asm, reg: Self::IntReg);
+    fn popf(asm: &mut Asm, reg: Self::FloatReg);
+
+    fn pushli(asm: &mut Asm, val: i64);
+    fn pushlf(asm: &mut Asm, val: f64);
+
+    fn pushi(asm: &mut Asm, reg: Self::IntReg);
+    fn pushf(asm: &mut Asm, reg: Self::FloatReg);
+
     fn ret(asm: &mut Asm);
 }
 

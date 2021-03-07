@@ -3,7 +3,9 @@ use anyhow::{anyhow, Error, Result};
 use crate::asm::arch::Asm;
 use crate::asm::exec::Arch;
 
-pub struct X8664;
+pub struct X8664 {
+    asm: Asm,
+}
 
 impl Arch for X8664 {
     type IntReg = IntReg;
@@ -112,6 +114,30 @@ impl Arch for X8664 {
     }
 
     fn powf(asm: &mut Asm, op: Self::FloatReg)  {
+        unimplemented!()
+    }
+
+    fn popi(asm: &mut Asm, reg: Self::IntReg) {
+        unimplemented!()
+    }
+
+    fn popf(asm: &mut Asm, reg: Self::FloatReg) {
+        unimplemented!()
+    }
+
+    fn pushli(asm: &mut Asm, val: i64) {
+        unimplemented!()
+    }
+
+    fn pushlf(asm: &mut Asm, val: f64) {
+        unimplemented!()
+    }
+
+    fn pushi(asm: &mut Asm, reg: Self::IntReg) {
+        unimplemented!()
+    }
+
+    fn pushf(asm: &mut Asm, reg: Self::FloatReg) {
         unimplemented!()
     }
 
