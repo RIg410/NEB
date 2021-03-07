@@ -1,58 +1,8 @@
 use anyhow::Result;
 
-use crate::asm::arch::Asm;
+use crate::asm::arch::{Asm, Arch};
 use crate::parser::ast::{Exp, Op, Val};
 
-pub trait Arch {
-    type IntReg: PartialEq + Eq;
-    type FloatReg: PartialEq + Eq;
-
-    const INT_RET: Self::IntReg;
-    const FLOAT_RET: Self::FloatReg;
-
-    const INT_ACC: Self::IntReg;
-    const FLOAT_ACC: Self::FloatReg;
-
-    const INT_TMP: Self::IntReg;
-    const FLOAT_TMP: Self::FloatReg;
-
-    fn movi(asm: &mut Asm, from: Self::IntReg, to: Self::IntReg);
-    fn movf(asm: &mut Asm, from: Self::FloatReg, to: Self::FloatReg);
-
-    fn storei(asm: &mut Asm, reg: Self::IntReg, val: i64);
-    fn storef(asm: &mut Asm, reg: Self::FloatReg, val: f64);
-
-    fn castf(asm: &mut Asm, from: Self::IntReg, to: Self::FloatReg);
-
-    fn addi(asm: &mut Asm, op: Self::IntReg);
-    fn addf(asm: &mut Asm, op: Self::FloatReg);
-
-    fn subi(asm: &mut Asm, op: Self::IntReg);
-    fn subf(asm: &mut Asm, op: Self::FloatReg);
-
-    fn muli(asm: &mut Asm, op: Self::IntReg);
-    fn mulf(asm: &mut Asm, op: Self::FloatReg);
-
-    fn modi(asm: &mut Asm, op: Self::IntReg);
-    fn modf(asm: &mut Asm, op: Self::FloatReg);
-
-    fn divi(asm: &mut Asm, op: Self::IntReg);
-    fn divf(asm: &mut Asm, op: Self::FloatReg);
-
-    fn powi(asm: &mut Asm, op: Self::IntReg);
-    fn powf(asm: &mut Asm, op: Self::FloatReg);
-
-    fn popi(asm: &mut Asm, reg: Self::IntReg);
-    fn popf(asm: &mut Asm, reg: Self::FloatReg);
-
-    fn pushli(asm: &mut Asm, val: i64);
-    fn pushlf(asm: &mut Asm, val: f64);
-
-    fn pushi(asm: &mut Asm, reg: Self::IntReg);
-    fn pushf(asm: &mut Asm, reg: Self::FloatReg);
-
-    fn ret(asm: &mut Asm);
-}
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum Rt {
@@ -62,7 +12,7 @@ pub enum Rt {
 
 pub trait AsmCode {
     fn result_type(&self) -> Rt;
-    fn to_asm<A: Arch>(&self, asm: &mut Asm, int: A::IntReg, float: A::FloatReg);
+    fn to_asm<A: Arch>(&self, asm: &mut A, int: A::IntReg, float: A::FloatReg);
 }
 
 impl AsmCode for Val {
@@ -73,7 +23,7 @@ impl AsmCode for Val {
         }
     }
 
-    fn to_asm<A: Arch>(&self, asm: &mut Asm, int: A::IntReg, float: A::FloatReg) {
+    fn to_asm<A: Arch>(&self, asm: &mut A, int: A::IntReg, float: A::FloatReg) {
         match self {
             Val::Int(val) => A::storei(asm, int, *val),
             Val::Float(val) => A::storef(asm, float, *val),
@@ -95,7 +45,7 @@ impl AsmCode for Exp {
         }
     }
 
-    fn to_asm<A: Arch>(&self, asm: &mut Asm, int: A::IntReg, float: A::FloatReg) {
+    fn to_asm<A: Arch>(&self, asm: &mut A, int: A::IntReg, float: A::FloatReg) {
         match self {
             Exp::Val(val) => val.to_asm::<A>(asm, int, float),
             Exp::Exp { op, left, right } => {

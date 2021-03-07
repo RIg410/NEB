@@ -88,3 +88,59 @@ impl<T> Drop for Elf<T> {
         }
     }
 }
+
+
+pub trait Arch {
+    type IntReg: PartialEq + Eq;
+    type FloatReg: PartialEq + Eq;
+
+    const INT_RET: Self::IntReg;
+    const FLOAT_RET: Self::FloatReg;
+
+    const INT_ACC: Self::IntReg;
+    const FLOAT_ACC: Self::FloatReg;
+
+    const INT_TMP: Self::IntReg;
+    const FLOAT_TMP: Self::FloatReg;
+
+    fn movi(&mut self, from: Self::IntReg, to: Self::IntReg);
+    fn movf(&mut self, from: Self::FloatReg, to: Self::FloatReg);
+
+    fn storei(&mut self, reg: Self::IntReg, val: i64);
+    fn storef(&mut self, reg: Self::FloatReg, val: f64);
+
+    fn castf(&mut self, from: Self::IntReg, to: Self::FloatReg);
+
+    fn addi(&mut self, op: Self::IntReg);
+    fn addf(&mut self, op: Self::FloatReg);
+
+    fn subi(&mut self, op: Self::IntReg);
+    fn subf(&mut self, op: Self::FloatReg);
+
+    fn muli(&mut self, op: Self::IntReg);
+    fn mulf(&mut self, op: Self::FloatReg);
+
+    fn modi(&mut self, op: Self::IntReg);
+    fn modf(&mut self, op: Self::FloatReg);
+
+    fn divi(&mut self, op: Self::IntReg);
+    fn divf(&mut self, op: Self::FloatReg);
+
+    fn powi(&mut self, op: Self::IntReg);
+    fn powf(&mut self, op: Self::FloatReg);
+
+    fn popi(&mut self, reg: Self::IntReg);
+    fn popf(&mut self, reg: Self::FloatReg);
+
+    fn pushli(&mut self, val: i64);
+    fn pushlf(&mut self, val: f64);
+
+    fn pushi(&mut self, reg: Self::IntReg);
+    fn pushf(&mut self, reg: Self::FloatReg);
+
+    fn ret(&mut self);
+}
+
+pub trait DebugMod {
+    fn debug_mod(&mut self, debug_mod: bool);
+}

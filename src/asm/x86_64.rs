@@ -1,10 +1,25 @@
+use std::fmt::{Display, Formatter};
+use std::fmt;
+
 use anyhow::{anyhow, Error, Result};
 
-use crate::asm::arch::Asm;
-use crate::asm::exec::Arch;
+use crate::asm::arch::{Asm, Arch, DebugMod};
 
 pub struct X8664 {
     asm: Asm,
+    debug: bool,
+}
+
+impl X8664 {
+    fn put(&mut self, bytes: &[u8]) {
+        self.asm.put(bytes);
+    }
+
+    fn dbg(&self, f: impl Fn()) {
+        if self.debug {
+            f()
+        }
+    }
 }
 
 impl Arch for X8664 {
@@ -20,129 +35,172 @@ impl Arch for X8664 {
     const INT_TMP: Self::IntReg = IntReg::RCX;
     const FLOAT_TMP: Self::FloatReg = FloatReg::XMM1;
 
-    fn movi(asm: &mut Asm, from: Self::IntReg, to: Self::IntReg) {
+    fn movi(&mut self, from: Self::IntReg, to: Self::IntReg) {
+        self.dbg(|| println!("movi {}, {}", to, from));
+
         if from == to {
             return;
         }
-        asm.put(&[0x48, 0x89]);
+        self.put(&[0x48, 0x89]);
 
         if from == IntReg::RAX && to == IntReg::RCX {
-            asm.put(&[0xc1]);
+            self.put(&[0xc1]);
             return;
         }
 
         if from == IntReg::RCX && to == IntReg::RAX {
-            asm.put(&[0xc8]);
+            self.put(&[0xc8]);
         }
     }
 
-    fn movf(asm: &mut Asm, from: Self::FloatReg, to: Self::FloatReg)  {
+    fn movf(&mut self, from: Self::FloatReg, to: Self::FloatReg) {
+        self.dbg(|| println!("movf {}, {}", to, from));
         unimplemented!()
     }
 
-    fn storei(asm: &mut Asm, reg: Self::IntReg, val: i64) {
-        asm.put(&[0x48]);
+    fn storei(&mut self, reg: Self::IntReg, val: i64) {
+        self.dbg(|| println!("movi {}, {}", reg, val));
+
+        self.put(&[0x48]);
         match reg {
-            IntReg::RAX => asm.put(&[0xb8]),
-            IntReg::RCX => asm.put(&[0xb9]),
+            IntReg::RAX => self.put(&[0xb8]),
+            IntReg::RCX => self.put(&[0xb9]),
         }
-        asm.put(&val.to_le_bytes());
+        self.put(&val.to_le_bytes());
     }
 
-    fn storef(asm: &mut Asm, reg: Self::FloatReg, val: f64) {
+    fn storef(&mut self, reg: Self::FloatReg, val: f64) {
+        self.dbg(|| println!("movf {}, {}", reg, val));
         unimplemented!()
     }
 
-    fn castf(asm: &mut Asm, from: Self::IntReg, to: Self::FloatReg) {
+    fn castf(&mut self, from: Self::IntReg, to: Self::FloatReg) {
+        self.dbg(|| println!("movc {}, {}", to, from));
         unimplemented!()
     }
 
-    fn addi(asm: &mut Asm, op: Self::IntReg) {
-        asm.put(&[0x48, 0x01]);
+    fn addi(&mut self, op: Self::IntReg) {
+        self.dbg(|| println!("addi {}, {}", Self::INT_ACC, op));
+
+        self.put(&[0x48, 0x01]);
         match op {
-            IntReg::RAX => asm.put(&[0xc0]),
-            IntReg::RCX => asm.put(&[0xc8]),
+            IntReg::RAX => self.put(&[0xc0]),
+            IntReg::RCX => self.put(&[0xc8]),
         }
     }
 
-    fn addf(asm: &mut Asm, op: Self::FloatReg)  {
+    fn addf(&mut self, op: Self::FloatReg) {
+        self.dbg(|| println!("addi {}, {}", Self::FLOAT_ACC, op));
         unimplemented!()
     }
 
-    fn subi(asm: &mut Asm, op: Self::IntReg)  {
+    fn subi(&mut self, op: Self::IntReg) {
+        self.dbg(|| println!("subi {}, {}", Self::INT_ACC, op));
+
         unimplemented!()
     }
 
-    fn subf(asm: &mut Asm, op: Self::FloatReg)  {
+    fn subf(&mut self, op: Self::FloatReg) {
+        self.dbg(|| println!("subf {}, {}", Self::FLOAT_ACC, op));
+
         unimplemented!()
     }
 
-    fn muli(asm: &mut Asm, op: Self::IntReg) {
-        asm.put(&[0x48, 0xf7]);
+    fn muli(&mut self, op: Self::IntReg) {
+        self.dbg(|| println!("muli {}, {}", Self::INT_ACC, op));
+
+        self.put(&[0x48, 0xf7]);
         match op {
-            IntReg::RAX => asm.put(&[0xe8]),
-            IntReg::RCX => asm.put(&[0xe9]),
+            IntReg::RAX => self.put(&[0xe8]),
+            IntReg::RCX => self.put(&[0xe9]),
         }
     }
 
-    fn mulf(asm: &mut Asm, op: Self::FloatReg)  {
+    fn mulf(&mut self, op: Self::FloatReg) {
+        self.dbg(|| println!("mulf {}, {}", Self::FLOAT_ACC, op));
+
         unimplemented!()
     }
 
-    fn modi(asm: &mut Asm, op: Self::IntReg)  {
+    fn modi(&mut self, op: Self::IntReg) {
         unimplemented!()
     }
 
-    fn modf(asm: &mut Asm, op: Self::FloatReg) {
+    fn modf(&mut self, op: Self::FloatReg) {
         unimplemented!()
     }
 
-    fn divi(asm: &mut Asm, op: Self::IntReg) {
-        asm.put(&[0x48, 0xf7]);
+    fn divi(&mut self, op: Self::IntReg) {
+        self.dbg(|| println!("divi {}, {}", Self::INT_ACC, op));
+
+        self.put(&[0x48, 0xf7]);
         match op {
-            IntReg::RAX => asm.put(&[0xf8]),
-            IntReg::RCX => asm.put(&[0xf9]),
+            IntReg::RAX => self.put(&[0xf8]),
+            IntReg::RCX => self.put(&[0xf9]),
         }
     }
 
-    fn divf(asm: &mut Asm, op: Self::FloatReg) {
+    fn divf(&mut self, op: Self::FloatReg) {
+        self.dbg(|| println!("divf {}, {}", Self::INT_ACC, op));
         unimplemented!()
     }
 
-    fn powi(asm: &mut Asm, op: Self::IntReg)  {
+    fn powi(&mut self, op: Self::IntReg) {
         unimplemented!()
     }
 
-    fn powf(asm: &mut Asm, op: Self::FloatReg)  {
+    fn powf(&mut self, op: Self::FloatReg) {
         unimplemented!()
     }
 
-    fn popi(asm: &mut Asm, reg: Self::IntReg) {
+    fn popi(&mut self, reg: Self::IntReg) {
         unimplemented!()
     }
 
-    fn popf(asm: &mut Asm, reg: Self::FloatReg) {
+    fn popf(&mut self, reg: Self::FloatReg) {
         unimplemented!()
     }
 
-    fn pushli(asm: &mut Asm, val: i64) {
+    fn pushli(&mut self, val: i64) {
         unimplemented!()
     }
 
-    fn pushlf(asm: &mut Asm, val: f64) {
+    fn pushlf(&mut self, val: f64) {
         unimplemented!()
     }
 
-    fn pushi(asm: &mut Asm, reg: Self::IntReg) {
+    fn pushi(&mut self, reg: Self::IntReg) {
         unimplemented!()
     }
 
-    fn pushf(asm: &mut Asm, reg: Self::FloatReg) {
+    fn pushf(&mut self, reg: Self::FloatReg) {
         unimplemented!()
     }
 
-    fn ret(asm: &mut Asm) {
-        asm.put(&[0xc3]);
+    fn ret(&mut self) {
+        self.dbg(|| println!("ret"));
+        self.put(&[0xc3]);
+    }
+}
+
+impl DebugMod for X8664 {
+    fn debug_mod(&mut self, debug_mod: bool) {
+        self.debug = debug_mod;
+    }
+}
+
+impl Default for X8664 {
+    fn default() -> Self {
+        X8664 {
+            asm: Asm::new(),
+            debug: false,
+        }
+    }
+}
+
+impl Into<Asm> for X8664 {
+    fn into(self) -> Asm {
+        self.asm
     }
 }
 
@@ -156,4 +214,22 @@ pub enum IntReg {
 pub enum FloatReg {
     XMM0,
     XMM1,
+}
+
+impl Display for IntReg {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            IntReg::RAX => write!(f, "rax"),
+            IntReg::RCX => write!(f, "rcx"),
+        }
+    }
+}
+
+impl Display for FloatReg {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            FloatReg::XMM0 => write!(f, "xmm0"),
+            FloatReg::XMM1 => write!(f, "xmm1"),
+        }
+    }
 }
