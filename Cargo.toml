@@ -7,3 +7,4 @@ edition = "2018"
 [dependencies]
 anyhow = "1.0.38"
 libc = "0.2.88"
+hex = "*"

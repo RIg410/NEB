@@ -1,23 +1,15 @@
 use std::{io, ptr, slice};
 
+use anyhow::Error;
 #[cfg(any(unix))]
-use libc::{
-    MAP_ANONYMOUS,
-    MAP_PRIVATE,
-    mmap,
-    munmap,
-    PROT_EXEC,
-    PROT_READ,
-    PROT_WRITE,
-};
-
+use libc::{mmap, munmap, MAP_ANONYMOUS, MAP_PRIVATE, PROT_EXEC, PROT_READ, PROT_WRITE};
 
 pub trait Bytecode {
     fn encode(&self) -> Vec<u8>;
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Asm where {
+pub struct Asm {
     bytes: Vec<u8>,
 }
 
@@ -27,13 +19,21 @@ impl Asm {
             bytes: Vec::with_capacity(64),
         }
     }
-    //
-    // pub fn put(&mut self, code: B) {
-    //     self.bytes.extend_from_slice(&code.encode());
-    // }
+
+    pub fn put(&mut self, code: &[u8]) {
+        self.bytes.extend_from_slice(code);
+    }
+
+    pub fn buffer(&self) -> &[u8] {
+        &self.bytes
+    }
 
     #[cfg(any(unix))]
-    pub fn prepare<T>(&self) -> Result<Elf<T>, io::Error> {
+    pub fn prepare<T>(&self) -> Result<Elf<T>, Error> {
+        if self.bytes.is_empty() {
+            return Err(Error::msg("Empty buffer"));
+        }
+
         let ptr = unsafe {
             mmap(
                 ptr::null_mut(),
@@ -45,7 +45,7 @@ impl Asm {
             )
         };
         if ptr == ptr::null_mut() {
-            Err(io::Error::last_os_error())
+            Err(io::Error::last_os_error().into())
         } else {
             unsafe { ptr::copy(self.bytes.as_ptr(), ptr as *mut u8, self.bytes.len()) }
             Ok(Elf {
@@ -64,18 +64,18 @@ pub struct Elf<T> {
 
 impl<T> Elf<T> {
     pub unsafe fn func(&self) -> T
-        where
-            T: Copy
+    where
+        T: Copy,
     {
         *(&self.func as *const *mut T as *const T)
     }
 
-    pub fn len(&self) -> usize { self.size }
+    pub fn len(&self) -> usize {
+        self.size
+    }
 
     pub fn bytecode(&self) -> Vec<u8> {
-        Vec::from(unsafe {
-            slice::from_raw_parts(self.func as *const u8, self.size)
-        })
+        Vec::from(unsafe { slice::from_raw_parts(self.func as *const u8, self.size) })
     }
 }
 

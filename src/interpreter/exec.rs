@@ -14,48 +14,36 @@ impl Execution for Exp {
             Exp::Exp { op, left, right } => {
                 let (left, right) = unify_types(left.exec(), right.exec());
                 match op {
-                    Op::Add => {
-                        match (left, right) {
-                            (Val::Float(l), Val::Float(r)) => { Val::Float(l + r) }
-                            (Val::Int(l), Val::Int(r)) => { Val::Int(l + r) }
-                            _ => panic!("invalid invariant")
-                        }
-                    }
-                    Op::Sub => {
-                        match (left, right) {
-                            (Val::Float(l), Val::Float(r)) => { Val::Float(l - r) }
-                            (Val::Int(l), Val::Int(r)) => { Val::Int(l - r) }
-                            _ => panic!("invalid invariant")
-                        }
-                    }
-                    Op::Mul => {
-                        match (left, right) {
-                            (Val::Float(l), Val::Float(r)) => { Val::Float(l * r) }
-                            (Val::Int(l), Val::Int(r)) => { Val::Int(l * r) }
-                            _ => panic!("invalid invariant")
-                        }
-                    }
-                    Op::Mod => {
-                        match (left, right) {
-                            (Val::Float(l), Val::Float(r)) => { Val::Float(l % r) }
-                            (Val::Int(l), Val::Int(r)) => { Val::Int(l % r) }
-                            _ => panic!("invalid invariant")
-                        }
-                    }
-                    Op::Div => {
-                        match (left, right) {
-                            (Val::Float(l), Val::Float(r)) => { Val::Float(l / r) }
-                            (Val::Int(l), Val::Int(r)) => { Val::Int(l / r) }
-                            _ => panic!("invalid invariant")
-                        }
-                    }
-                    Op::Pow => {
-                        match (left, right) {
-                            (Val::Float(l), Val::Float(r)) => { Val::Float(l.powf(r)) }
-                            (Val::Int(l), Val::Int(r)) => { Val::Int(l.pow(r as u32)) }
-                            _ => panic!("invalid invariant")
-                        }
-                    }
+                    Op::Add => match (left, right) {
+                        (Val::Float(l), Val::Float(r)) => Val::Float(l + r),
+                        (Val::Int(l), Val::Int(r)) => Val::Int(l + r),
+                        _ => panic!("invalid invariant"),
+                    },
+                    Op::Sub => match (left, right) {
+                        (Val::Float(l), Val::Float(r)) => Val::Float(l - r),
+                        (Val::Int(l), Val::Int(r)) => Val::Int(l - r),
+                        _ => panic!("invalid invariant"),
+                    },
+                    Op::Mul => match (left, right) {
+                        (Val::Float(l), Val::Float(r)) => Val::Float(l * r),
+                        (Val::Int(l), Val::Int(r)) => Val::Int(l * r),
+                        _ => panic!("invalid invariant"),
+                    },
+                    Op::Mod => match (left, right) {
+                        (Val::Float(l), Val::Float(r)) => Val::Float(l % r),
+                        (Val::Int(l), Val::Int(r)) => Val::Int(l % r),
+                        _ => panic!("invalid invariant"),
+                    },
+                    Op::Div => match (left, right) {
+                        (Val::Float(l), Val::Float(r)) => Val::Float(l / r),
+                        (Val::Int(l), Val::Int(r)) => Val::Int(l / r),
+                        _ => panic!("invalid invariant"),
+                    },
+                    Op::Pow => match (left, right) {
+                        (Val::Float(l), Val::Float(r)) => Val::Float(l.powf(r)),
+                        (Val::Int(l), Val::Int(r)) => Val::Int(l.pow(r as u32)),
+                        _ => panic!("invalid invariant"),
+                    },
                 }
             }
         }

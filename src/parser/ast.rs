@@ -1,5 +1,5 @@
-use std::fmt::{Display, Formatter};
 use std::fmt;
+use std::fmt::{Display, Formatter};
 use std::ops::Range;
 
 use anyhow::{anyhow, Error};
@@ -45,14 +45,18 @@ pub enum Op {
 
 impl Display for Op {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", match self {
-            Op::Add => '+',
-            Op::Sub => '-',
-            Op::Mul => '*',
-            Op::Mod => '%',
-            Op::Div => '/',
-            Op::Pow => '^',
-        })
+        write!(
+            f,
+            "{}",
+            match self {
+                Op::Add => '+',
+                Op::Sub => '-',
+                Op::Mul => '*',
+                Op::Mod => '%',
+                Op::Div => '/',
+                Op::Pow => '^',
+            }
+        )
     }
 }
 
@@ -71,7 +75,7 @@ impl Op {
 
 #[derive(Debug, PartialEq, PartialOrd, Clone, Copy)]
 pub enum Val {
-    Int(i128),
+    Int(i64),
     Float(f64),
 }
 
@@ -87,7 +91,7 @@ impl Val {
     #[inline]
     pub fn into_float(self) -> Val {
         match self {
-            Val::Int(val) => { Val::Float(val as f64) }
+            Val::Int(val) => Val::Float(val as f64),
             Val::Float(val) => Val::Float(val),
         }
     }
@@ -159,9 +163,9 @@ pub fn parse_exp(lexer: &mut Lexer) -> Result<Sequence, Error> {
                 seq.push(Some(parse_exp(lexer)?));
                 if lexer.token() != Token::RParen {
                     return Err(anyhow!(
-                            "Unexpected end of input. Expected ')' token. Position: {}",
-                            lexer.loc()
-                        ));
+                        "Unexpected end of input. Expected ')' token. Position: {}",
+                        lexer.loc()
+                    ));
                 }
             }
             Token::EOF => {
@@ -290,7 +294,8 @@ fn parse_number(negative: bool, lexer: &mut Lexer) -> Result<Val, Error> {
 }
 
 fn make_exp(mut seq: Vec<Option<Sequence>>) -> Result<Exp, Error> {
-    let mut operator_order = seq.iter()
+    let mut operator_order = seq
+        .iter()
         .flatten()
         .enumerate()
         .filter_map(|(i, sq)| {
@@ -303,34 +308,41 @@ fn make_exp(mut seq: Vec<Option<Sequence>>) -> Result<Exp, Error> {
         .collect::<Vec<_>>();
 
     operator_order.sort_by(|(l_order, l_index, _), (r_order, r_index, _)| {
-        (*l_order, *l_index).cmp(&(*r_order, *r_index)
-        )
+        (*l_order, *l_index).cmp(&(*r_order, *r_index))
     });
 
     let mut buffer: Vec<(Range<usize>, Exp)> = Vec::new();
 
-    fn find_in_buffer(buffer: &mut Vec<(Range<usize>, Exp)>, index: usize) -> Option<(Range<usize>, Exp)> {
-        if let Some(index) = buffer.iter().enumerate()
-            .find_map(|(i, (range, _))| {
-                if range.start <= index && range.end >= index {
-                    Some(i)
-                } else {
-                    None
-                }
-            }) {
+    fn find_in_buffer(
+        buffer: &mut Vec<(Range<usize>, Exp)>,
+        index: usize,
+    ) -> Option<(Range<usize>, Exp)> {
+        if let Some(index) = buffer.iter().enumerate().find_map(|(i, (range, _))| {
+            if range.start <= index && range.end >= index {
+                Some(i)
+            } else {
+                None
+            }
+        }) {
             Some(buffer.remove(index))
         } else {
             None
         }
     }
 
-    fn find_exp(buffer: &mut Vec<(Range<usize>, Exp)>, seq: &mut Vec<Option<Sequence>>, index: usize) -> Result<(Range<usize>, Exp), Error> {
+    fn find_exp(
+        buffer: &mut Vec<(Range<usize>, Exp)>,
+        seq: &mut Vec<Option<Sequence>>,
+        index: usize,
+    ) -> Result<(Range<usize>, Exp), Error> {
         find_in_buffer(buffer, index)
-            .or_else(||
-                seq[index].take()
+            .or_else(|| {
+                seq[index]
+                    .take()
                     .and_then(|sq| sq.exp())
                     .map(|ex| (((index..index), ex)))
-            ).ok_or_else(|| anyhow!("Invalid expiration"))
+            })
+            .ok_or_else(|| anyhow!("Invalid expiration"))
     }
 
     for (_, index, operator) in operator_order {
@@ -367,13 +379,19 @@ mod test {
 
     #[test]
     fn test_exp() {
-        perform_test("10 * 1 + -2 / 10,1 % 0.1 ^ 1", "((10 * 1) + ((-2 / 10.1) % (0.1 ^ 1)))");
+        perform_test(
+            "10 * 1 + -2 / 10,1 % 0.1 ^ 1",
+            "((10 * 1) + ((-2 / 10.1) % (0.1 ^ 1)))",
+        );
         perform_test("13", "13");
         perform_test("10 - 1", "(10 - 1)");
         perform_test("-10 +  -1", "(-10 + -1)");
         perform_test("10 - (1 * 2)", "(10 - (1 * 2))");
         perform_test("(1 * 2) + 10", "((1 * 2) + 10)");
         perform_test("10", "10");
-        perform_test("(1 + 2) * 10 * (3 - 10^2) ", "(((1 + 2) * 10) * (3 - (10 ^ 2)))");
+        perform_test(
+            "(1 + 2) * 10 * (3 - 10^2) ",
+            "(((1 + 2) * 10) * (3 - (10 ^ 2)))",
+        );
     }
 }
