@@ -15,24 +15,34 @@ impl Arch for X8664 {
     const INT_ACC: Self::IntReg = IntReg::RAX;
     const FLOAT_ACC: Self::FloatReg = FloatReg::XMM0;
 
-    const INT_TMP: Self::IntReg = IntReg::RBX;
+    const INT_TMP: Self::IntReg = IntReg::RCX;
     const FLOAT_TMP: Self::FloatReg = FloatReg::XMM1;
 
-    fn movi(asm: &mut Asm, from: Self::IntReg, to: Self::IntReg) -> Result<(), Error> {
-        unimplemented!()
+    fn movi(asm: &mut Asm, from: Self::IntReg, to: Self::IntReg) {
+        if from == to {
+            return;
+        }
+        asm.put(&[0x48, 0x89]);
+
+        if from == IntReg::RAX && to == IntReg::RCX {
+            asm.put(&[0xc1]);
+            return;
+        }
+
+        if from == IntReg::RCX && to == IntReg::RAX {
+            asm.put(&[0xc8]);
+        }
     }
 
-    fn movf(asm: &mut Asm, from: Self::FloatReg, to: Self::FloatReg) -> Result<(), Error> {
+    fn movf(asm: &mut Asm, from: Self::FloatReg, to: Self::FloatReg)  {
         unimplemented!()
     }
 
     fn storei(asm: &mut Asm, reg: Self::IntReg, val: i64) {
-        //mov
         asm.put(&[0x48]);
-        // register
         match reg {
             IntReg::RAX => asm.put(&[0xb8]),
-            IntReg::RBX => asm.put(&[0xb8]),
+            IntReg::RCX => asm.put(&[0xb9]),
         }
         asm.put(&val.to_le_bytes());
     }
@@ -41,55 +51,67 @@ impl Arch for X8664 {
         unimplemented!()
     }
 
-    fn castf(asm: &mut Asm, from: Self::IntReg, to: Self::FloatReg) -> Result<(), Error> {
+    fn castf(asm: &mut Asm, from: Self::IntReg, to: Self::FloatReg) {
         unimplemented!()
     }
 
-    fn addi(asm: &mut Asm, op: Self::IntReg) -> Result<(), Error> {
+    fn addi(asm: &mut Asm, op: Self::IntReg) {
+        asm.put(&[0x48, 0x01]);
+        match op {
+            IntReg::RAX => asm.put(&[0xc0]),
+            IntReg::RCX => asm.put(&[0xc8]),
+        }
+    }
+
+    fn addf(asm: &mut Asm, op: Self::FloatReg)  {
         unimplemented!()
     }
 
-    fn addf(asm: &mut Asm, op: Self::FloatReg) -> Result<(), Error> {
+    fn subi(asm: &mut Asm, op: Self::IntReg)  {
         unimplemented!()
     }
 
-    fn subi(asm: &mut Asm, op: Self::IntReg) -> Result<(), Error> {
+    fn subf(asm: &mut Asm, op: Self::FloatReg)  {
         unimplemented!()
     }
 
-    fn subf(asm: &mut Asm, op: Self::FloatReg) -> Result<(), Error> {
+    fn muli(asm: &mut Asm, op: Self::IntReg) {
+        asm.put(&[0x48, 0xf7]);
+        match op {
+            IntReg::RAX => asm.put(&[0xe8]),
+            IntReg::RCX => asm.put(&[0xe9]),
+        }
+    }
+
+    fn mulf(asm: &mut Asm, op: Self::FloatReg)  {
         unimplemented!()
     }
 
-    fn muli(asm: &mut Asm, op: Self::IntReg) -> Result<(), Error> {
+    fn modi(asm: &mut Asm, op: Self::IntReg)  {
         unimplemented!()
     }
 
-    fn mulf(asm: &mut Asm, op: Self::FloatReg) -> Result<(), Error> {
+    fn modf(asm: &mut Asm, op: Self::FloatReg) {
         unimplemented!()
     }
 
-    fn modi(asm: &mut Asm, op: Self::IntReg) -> Result<(), Error> {
+    fn divi(asm: &mut Asm, op: Self::IntReg) {
+        asm.put(&[0x48, 0xf7]);
+        match op {
+            IntReg::RAX => asm.put(&[0xf8]),
+            IntReg::RCX => asm.put(&[0xf9]),
+        }
+    }
+
+    fn divf(asm: &mut Asm, op: Self::FloatReg) {
         unimplemented!()
     }
 
-    fn modf(asm: &mut Asm, op: Self::FloatReg) -> Result<(), Error> {
+    fn powi(asm: &mut Asm, op: Self::IntReg)  {
         unimplemented!()
     }
 
-    fn divi(asm: &mut Asm, op: Self::IntReg) -> Result<(), Error> {
-        unimplemented!()
-    }
-
-    fn divf(asm: &mut Asm, op: Self::FloatReg) -> Result<(), Error> {
-        unimplemented!()
-    }
-
-    fn powi(asm: &mut Asm, op: Self::IntReg) -> Result<(), Error> {
-        unimplemented!()
-    }
-
-    fn powf(asm: &mut Asm, op: Self::FloatReg) -> Result<(), Error> {
+    fn powf(asm: &mut Asm, op: Self::FloatReg)  {
         unimplemented!()
     }
 
@@ -101,7 +123,7 @@ impl Arch for X8664 {
 #[derive(Debug, PartialEq, Eq)]
 pub enum IntReg {
     RAX,
-    RBX,
+    RCX,
 }
 
 #[derive(Debug, PartialEq, Eq)]

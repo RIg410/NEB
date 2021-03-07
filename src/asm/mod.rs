@@ -24,7 +24,7 @@ pub enum Fun<A: Arch> {
 }
 
 impl<A: Arch> Fun<A> {
-    fn call(&self) -> Val {
+    pub fn call(&self) -> Val {
         match self {
             Fun::Int { elf, .. } => {
                 let fun = unsafe { elf.func() };
@@ -34,6 +34,12 @@ impl<A: Arch> Fun<A> {
                 let fun = unsafe { elf.func() };
                 Val::Float(fun())
             }
+        }
+    }
+    pub fn bytecode(&self) -> Vec<u8> {
+        match self {
+            Fun::Int { elf, _a } => elf.bytecode(),
+            Fun::Float { elf, _a } => elf.bytecode(),
         }
     }
 }
@@ -69,6 +75,7 @@ mod test {
     use crate::asm::Fun;
     use crate::parser::ast::{parse_exp, Val};
     use crate::parser::lexer::Lexer;
+    use crate::asm::arch::Asm;
 
     fn perform(input: &str, result: Val) {
         let mut lexer = Lexer::new(input);
@@ -76,19 +83,29 @@ mod test {
         let exp = parse_exp(&mut lexer).unwrap().exp().unwrap();
         Fun::<Debug>::try_from(exp.clone());
         let fun = Fun::<X8664>::try_from(exp.clone()).unwrap();
+        println!("{}", hex::encode(fun.bytecode()));
         assert_eq!(fun.call(), result);
     }
 
     #[test]
     fn test_interpreter() {
-        perform("13", Val::Int(13));
-        //perform("-1", Val::Int(-1));
+        // perform("13", Val::Int(13));
+        // perform("-1", Val::Int(-1));
         // perform("-1.0", Val::Float(-1.0));
-        // perform("13 + 13", Val::Int(13 + 13));
+         //perform("13 + 13", Val::Int(13 + 13));
         // perform(" 2 * 13 + 13", Val::Int(2 * 13 + 13));
         // perform(" 2 * (13 + 13)", Val::Int(2 * (13 + 13)));
-        // perform(" 2 * (13 + 13) / 2", Val::Int(2 * (13 + 13) / 2));
+         perform(" 2 * (13 + 13) / 2", Val::Int(2 * (13 + 13) / 2));
         // perform("(2 + 2) * 10 ^ 2", Val::Int((2 + 2) * 10i128.pow(2)));
         // perform("(2 + 2) * 10.0", Val::Float((2 + 2) as f64 * 10.0));
+    }
+
+    #[test]
+    fn tes() {
+        let mut asm = Asm::new();
+        asm.put(&[0x48, 0xB9, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F, 0x48, 0x89, 0xC8, 0xC3]);
+        let fun = asm.prepare::<fn() -> i64>().unwrap();
+        let f = unsafe{fun.func()};
+        dbg!(f());
     }
 }

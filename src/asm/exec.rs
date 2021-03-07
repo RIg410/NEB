@@ -16,31 +16,31 @@ pub trait Arch {
     const INT_TMP: Self::IntReg;
     const FLOAT_TMP: Self::FloatReg;
 
-    fn movi(asm: &mut Asm, from: Self::IntReg, to: Self::IntReg) -> Result<()>;
-    fn movf(asm: &mut Asm, from: Self::FloatReg, to: Self::FloatReg) -> Result<()>;
+    fn movi(asm: &mut Asm, from: Self::IntReg, to: Self::IntReg);
+    fn movf(asm: &mut Asm, from: Self::FloatReg, to: Self::FloatReg);
 
     fn storei(asm: &mut Asm, reg: Self::IntReg, val: i64);
     fn storef(asm: &mut Asm, reg: Self::FloatReg, val: f64);
 
-    fn castf(asm: &mut Asm, from: Self::IntReg, to: Self::FloatReg) -> Result<()>;
+    fn castf(asm: &mut Asm, from: Self::IntReg, to: Self::FloatReg);
 
-    fn addi(asm: &mut Asm, op: Self::IntReg) -> Result<()>;
-    fn addf(asm: &mut Asm, op: Self::FloatReg) -> Result<()>;
+    fn addi(asm: &mut Asm, op: Self::IntReg);
+    fn addf(asm: &mut Asm, op: Self::FloatReg);
 
-    fn subi(asm: &mut Asm, op: Self::IntReg) -> Result<()>;
-    fn subf(asm: &mut Asm, op: Self::FloatReg) -> Result<()>;
+    fn subi(asm: &mut Asm, op: Self::IntReg);
+    fn subf(asm: &mut Asm, op: Self::FloatReg);
 
-    fn muli(asm: &mut Asm, op: Self::IntReg) -> Result<()>;
-    fn mulf(asm: &mut Asm, op: Self::FloatReg) -> Result<()>;
+    fn muli(asm: &mut Asm, op: Self::IntReg);
+    fn mulf(asm: &mut Asm, op: Self::FloatReg);
 
-    fn modi(asm: &mut Asm, op: Self::IntReg) -> Result<()>;
-    fn modf(asm: &mut Asm, op: Self::FloatReg) -> Result<()>;
+    fn modi(asm: &mut Asm, op: Self::IntReg);
+    fn modf(asm: &mut Asm, op: Self::FloatReg);
 
-    fn divi(asm: &mut Asm, op: Self::IntReg) -> Result<()>;
-    fn divf(asm: &mut Asm, op: Self::FloatReg) -> Result<()>;
+    fn divi(asm: &mut Asm, op: Self::IntReg);
+    fn divf(asm: &mut Asm, op: Self::FloatReg);
 
-    fn powi(asm: &mut Asm, op: Self::IntReg) -> Result<()>;
-    fn powf(asm: &mut Asm, op: Self::FloatReg) -> Result<()>;
+    fn powi(asm: &mut Asm, op: Self::IntReg);
+    fn powf(asm: &mut Asm, op: Self::FloatReg);
 
     fn ret(asm: &mut Asm);
 }
@@ -53,7 +53,7 @@ pub enum Rt {
 
 pub trait AsmCode {
     fn result_type(&self) -> Rt;
-    fn to_asm<A: Arch>(&self, asm: &mut Asm, int: A::IntReg, float: A::FloatReg) -> Result<()>;
+    fn to_asm<A: Arch>(&self, asm: &mut Asm, int: A::IntReg, float: A::FloatReg);
 }
 
 impl AsmCode for Val {
@@ -64,12 +64,11 @@ impl AsmCode for Val {
         }
     }
 
-    fn to_asm<A: Arch>(&self, asm: &mut Asm, int: A::IntReg, float: A::FloatReg) -> Result<()> {
+    fn to_asm<A: Arch>(&self, asm: &mut Asm, int: A::IntReg, float: A::FloatReg) {
         match self {
             Val::Int(val) => A::storei(asm, int, *val),
             Val::Float(val) => A::storef(asm, float, *val),
         }
-        Ok(())
     }
 }
 
@@ -87,7 +86,7 @@ impl AsmCode for Exp {
         }
     }
 
-    fn to_asm<A: Arch>(&self, asm: &mut Asm, int: A::IntReg, float: A::FloatReg) -> Result<()> {
+    fn to_asm<A: Arch>(&self, asm: &mut Asm, int: A::IntReg, float: A::FloatReg) {
         match self {
             Exp::Val(val) => val.to_asm::<A>(asm, int, float),
             Exp::Exp { op, left, right } => {
@@ -99,79 +98,75 @@ impl AsmCode for Exp {
                 let need_cast = if left_rt != right_rt { true } else { false };
 
                 if left_rt == Rt::Int {
-                    left.to_asm::<A>(asm, A::INT_ACC, A::FLOAT_ACC)?;
+                    left.to_asm::<A>(asm, A::INT_ACC, A::FLOAT_ACC);
                     if need_cast {
-                        A::castf(asm, A::INT_ACC, A::FLOAT_ACC)?;
+                        A::castf(asm, A::INT_ACC, A::FLOAT_ACC);
                     }
                 } else {
-                    left.to_asm::<A>(asm, A::INT_ACC, A::FLOAT_ACC)?;
+                    left.to_asm::<A>(asm, A::INT_ACC, A::FLOAT_ACC);
                 }
 
                 if right_rt == Rt::Int {
-                    right.to_asm::<A>(asm, A::INT_TMP, A::FLOAT_TMP)?;
+                    right.to_asm::<A>(asm, A::INT_TMP, A::FLOAT_TMP);
                     if need_cast {
-                        A::castf(asm, A::INT_TMP, A::FLOAT_TMP)?;
+                        A::castf(asm, A::INT_TMP, A::FLOAT_TMP);
                     }
                 } else {
-                    right.to_asm::<A>(asm, A::INT_TMP, A::FLOAT_TMP)?;
+                    right.to_asm::<A>(asm, A::INT_TMP, A::FLOAT_TMP);
                 }
 
                 match op {
                     Op::Add => {
                         if int_result {
-                            A::addi(asm, A::INT_TMP)?;
+                            A::addi(asm, A::INT_TMP);
                         } else {
-                            A::addf(asm, A::FLOAT_TMP)?;
+                            A::addf(asm, A::FLOAT_TMP);
                         }
                     }
                     Op::Sub => {
                         if int_result {
-                            A::subi(asm, A::INT_TMP)?;
+                            A::subi(asm, A::INT_TMP);
                         } else {
-                            A::subf(asm, A::FLOAT_TMP)?;
+                            A::subf(asm, A::FLOAT_TMP);
                         }
                     }
                     Op::Mul => {
                         if int_result {
-                            A::muli(asm, A::INT_TMP)?;
+                            A::muli(asm, A::INT_TMP);
                         } else {
-                            A::mulf(asm, A::FLOAT_TMP)?;
+                            A::mulf(asm, A::FLOAT_TMP);
                         }
                     }
                     Op::Mod => {
                         if int_result {
-                            A::modi(asm, A::INT_TMP)?;
+                            A::modi(asm, A::INT_TMP);
                         } else {
-                            A::modf(asm, A::FLOAT_TMP)?;
+                            A::modf(asm, A::FLOAT_TMP);
                         }
                     }
                     Op::Div => {
                         if int_result {
-                            A::divi(asm, A::INT_TMP)?;
+                            A::divi(asm, A::INT_TMP);
                         } else {
-                            A::divf(asm, A::FLOAT_TMP)?;
+                            A::divf(asm, A::FLOAT_TMP);
                         }
                     }
                     Op::Pow => {
                         if int_result {
-                            A::powi(asm, A::INT_TMP)?;
+                            A::powi(asm, A::INT_TMP);
                         } else {
-                            A::powf(asm, A::FLOAT_TMP)?;
+                            A::powf(asm, A::FLOAT_TMP);
                         }
                     }
                 }
 
                 if int_result {
                     if A::INT_ACC != int {
-                        A::movi(asm, A::INT_ACC, int)
-                    } else {
-                        Ok(())
+                        A::movi(asm, A::INT_ACC, int);
                     }
                 } else {
                     if A::FLOAT_ACC != float {
-                        A::movf(asm, A::FLOAT_ACC, float)
-                    } else {
-                        Ok(())
+                        A::movf(asm, A::FLOAT_ACC, float);
                     }
                 }
             }
