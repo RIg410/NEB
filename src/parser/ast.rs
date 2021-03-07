@@ -40,7 +40,7 @@ pub enum Op {
     // /
     Div,
     // ^
-    Row,
+    Pow,
 }
 
 impl Display for Op {
@@ -51,7 +51,7 @@ impl Display for Op {
             Op::Mul => '*',
             Op::Mod => '%',
             Op::Div => '/',
-            Op::Row => '^',
+            Op::Pow => '^',
         })
     }
 }
@@ -64,7 +64,7 @@ impl Op {
             Op::Mul => 2,
             Op::Mod => 2,
             Op::Div => 2,
-            Op::Row => 1,
+            Op::Pow => 1,
         }
     }
 }
@@ -234,7 +234,7 @@ pub fn parse_exp(lexer: &mut Lexer) -> Result<Sequence, Error> {
                         return Err(anyhow!("Unexpected '^' token. Position: {}", lexer.loc()));
                     }
                 }
-                seq.push(Some(Sequence::Op(Op::Row)));
+                seq.push(Some(Sequence::Op(Op::Pow)));
             }
             Token::Percent => {
                 if let Some(last) = &last {

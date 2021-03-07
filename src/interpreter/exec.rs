@@ -49,7 +49,7 @@ impl Execution for Exp {
                             _ => panic!("invalid invariant")
                         }
                     }
-                    Op::Row => {
+                    Op::Pow => {
                         match (left, right) {
                             (Val::Float(l), Val::Float(r)) => { Val::Float(l.powf(r)) }
                             (Val::Int(l), Val::Int(r)) => { Val::Int(l.pow(r as u32)) }
